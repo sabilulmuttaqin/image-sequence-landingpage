@@ -2,13 +2,7 @@
 import { useRef } from 'react';
 
 const stories = [
-  {
-    title: "*WASSUP*",
-    text: "Let's get this party started.",
-    position: "top-[50vh] -translate-y-1/2 left-1/2 -translate-x-1/2 text-center",
-    align: "text-center",
-    textColor: "text-[var(--color-neon-green)]"
-  },
+
   {
     title: "UNLEASH THE *BEAST*",
     text: "Experience the surge of pure energy. No crash, just raw power.",
