@@ -18,12 +18,74 @@ export default function SequenceScroll({ onProgress, onLoaded, children }: Seque
   const frameCount = 192;
   const currentFrame = useRef({ index: 0 });
 
+  // Render function that handles High-DPI "cover" drawing
+  const renderFrame = (index: number) => {
+    const canvas = canvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    const images = imagesRef.current;
+    
+    if (!canvas || !ctx || !images[index]) return;
+
+    const img = images[index];
+    const rect = canvas.getBoundingClientRect();
+    
+    // Safety check if element is hidden
+    if (rect.width === 0 || rect.height === 0) return;
+    
+    // Calculate aspect ratio to cover
+    const scale = Math.max(rect.width / img.naturalWidth, rect.height / img.naturalHeight); // Standard cover without zoom
+    const dw = img.naturalWidth * scale;
+    const dh = img.naturalHeight * scale;
+    
+    const dx = (rect.width - dw) / 2;
+    const dy = (rect.height - dh) / 2;
+
+    // Clear using logical dimensions (since context is transformed)
+    ctx.clearRect(0, 0, rect.width, rect.height);
+    ctx.drawImage(img, dx, dy, dw, dh);
+  };
+
+  // Handle Resize & Retina Scaling
+  useEffect(() => {
+    const handleResize = () => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        const dpr = window.devicePixelRatio || 1;
+        const rect = canvas.getBoundingClientRect();
+
+        // 1. Set display size (css pixels) - handled by className/style, 
+        // but we read it via getBoundingClientRect.
+        // 2. Set actual size in memory (scaled to account for extra pixel density)
+        canvas.width = Math.round(rect.width * dpr);
+        canvas.height = Math.round(rect.height * dpr);
+
+        // 3. Normalize coordinate system to use css pixels
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        
+        // 4. Set Image Quality options
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+
+        // Re-render to prevent flicker
+        renderFrame(currentFrame.current.index);
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize(); // Initial sizing
+
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Preload Images
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
     let loadedCount = 0;
     const images: HTMLImageElement[] = [];
 
-    // Preload images
     for (let i = 1; i <= frameCount; i++) {
         const img = new Image();
         const formattedIndex = i.toString().padStart(3, '0');
@@ -36,7 +98,6 @@ export default function SequenceScroll({ onProgress, onLoaded, children }: Seque
             
             if (loadedCount === frameCount) {
                 onLoaded();
-                // Initial draw
                 renderFrame(0);
                 ScrollTrigger.refresh();
             }
@@ -45,42 +106,9 @@ export default function SequenceScroll({ onProgress, onLoaded, children }: Seque
         images.push(img);
     }
     imagesRef.current = images;
-
-    // Canvas Resize Logic
-    const handleResize = () => {
-        if (!canvasRef.current) return;
-        canvasRef.current.width = window.innerWidth;
-        canvasRef.current.height = window.innerHeight;
-        renderFrame(currentFrame.current.index);
-    };
-
-    window.addEventListener('resize', handleResize);
-    handleResize(); // Initial sizing
-
-    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Render function that handles "cover" style containment
-  const renderFrame = (index: number) => {
-    const canvas = canvasRef.current;
-    const ctx = canvas?.getContext('2d');
-    const images = imagesRef.current;
-    
-    if (!canvas || !ctx || !images[index]) return;
-
-    const img = images[index];
-    const w = canvas.width;
-    const h = canvas.height;
-    
-    // Calculate aspect ratio to cover
-    const scale = Math.max(w / img.width, h / img.height) * 1.2; // Zoom to crop watermark
-    const x = (w - img.width * scale) / 2;
-    const y = (h - img.height * scale) / 2;
-
-    ctx.clearRect(0, 0, w, h);
-    ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
-  };
-
+  // Scroll Animation
   useEffect(() => {
     if (!containerRef.current) return;
 
@@ -91,7 +119,6 @@ export default function SequenceScroll({ onProgress, onLoaded, children }: Seque
             end: "bottom bottom",
             scrub: 0.5,
             pin: canvasRef.current,
-            // markers: true, // For debugging
         }
     });
 
@@ -114,12 +141,21 @@ export default function SequenceScroll({ onProgress, onLoaded, children }: Seque
     <div 
         ref={containerRef} 
         className="relative w-full bg-black font-sans"
-        // Adjust height to control speed: 800vh means 8 screen heights to scroll through the sequence
         style={{ height: '800vh' }}
     >
         <canvas 
             ref={canvasRef} 
             className="block h-screen w-full object-cover z-0"
+            // Important: Style width/height must be 100% to fill container for getBoundingClientRect
+            style={{ width: '100vw', height: '100vh' }} 
+        />
+
+        {/* Vignette Overlay: Thicker linear gradient on sides to strictly cover watermark */}
+        <div 
+            className="absolute inset-0 z-[5] pointer-events-none"
+            style={{ 
+                background: 'linear-gradient(to right, black 0%, transparent 30%, transparent 70%, black 100%)'
+            }}
         />
         
         {/* Helper/Overlay Container */}
