@@ -66,25 +66,24 @@ export default function StoryOverlay() {
 
       <section className="absolute top-[250vh] right-[10%] text-right max-w-lg z-20 mix-blend-difference text-white">
         <h2 className="text-6xl md:text-8xl font-black tracking-tighter mb-4 leading-none">
-          PURE <br />
-          FOCUS
+          <span className="text-[var(--color-neon-green)]">PURE</span> <br />
+          <span className="text-white">FOCUS</span>
         </h2>
-        <p className="text-xl md:text-2xl font-bold opacity-100">
-        
+        <p className="text-xl md:text-2xl font-light opacity-100">
             
-               <span className="text-[var(--color-neon-green)]">Zero shortcuts. 100% intensity.</span> <br/>
-            <span className="font-bold opacity-100 text-white">Engineered to keep you locked in.</span>
+              Zero shortcuts. 100% intensity.<br/>
+            Engineered to keep you locked in.
         </p>
       </section>
 
       <section className="absolute top-[450vh] left-[10%] text-left max-w-lg z-20 mix-blend-difference text-white">
         <h2 className="text-6xl md:text-8xl font-black tracking-tighter mb-4 leading-none">
-          BEYOND <br />
-          HUMAN
+          <span className="text-[var(--color-neon-green)]">BEYOND</span> <br/>
+            <span className="text-white">HUMAN</span>
         </h2>
-        <p className="text-xl md:text-2xl font-bold opacity-100">
-            <span className="text-[var(--color-neon-green)]">Sustain your peak state.</span> <br/>
-            <span className="font-bold opacity-100 text-white">Precision in every drop.</span>
+        <p className="text-xl md:text-2xl font-light opacity-100">
+            Sustain your peak state.<br/>
+            Precision in every drop.
         </p>
       </section>
 

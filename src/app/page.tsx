@@ -6,6 +6,7 @@ import SequenceScroll from '@/components/SequenceScroll';
 import StoryOverlay from '@/components/StoryOverlay';
 import Loader from '@/components/Loader';
 import Testimonials from '@/components/Testimonials';
+import FAQ from '@/components/FAQ';
 import { ReactLenis } from 'lenis/react';
 
 export default function Home() {
@@ -80,8 +81,11 @@ export default function Home() {
         {/* Testimonials */}
         <Testimonials />
 
+        {/* FAQ Section */}
+        <FAQ />
+
         {/* CTA Section */}
-        <section className="relative z-10 bg-black py-40 flex flex-col items-center justify-center text-center px-6">
+        <section className="relative z-10 bg-black py-40 flex flex-col items-center justify-center text-center px-6 border-t border-white/5">
             <h2 className="text-6xl md:text-9xl font-black tracking-tighter mb-8 leading-none">
               <span className="block text-[var(--color-neon-green)]">IGNITE</span> 
               YOUR GAME
@@ -89,6 +93,13 @@ export default function Home() {
             <a href="#buy" className="inline-block px-12 py-5 bg-[var(--color-neon-green)] text-black text-xl font-bold tracking-wider hover:bg-white hover:scale-105 transition-all duration-300 rounded-lg">
                 GET STARTED
             </a>
+        </section>
+
+        {/* Giant Label Section */}
+        <section className="relative z-10 bg-black pt-20 overflow-hidden flex justify-center items-center pointer-events-none select-none">
+            <h1 className="text-[25vw] leading-[0.8] font-black tracking-tighter text-[#111] whitespace-nowrap">
+                MONSTA
+            </h1>
         </section>
 
         {/* Footer */}

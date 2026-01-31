@@ -15,8 +15,10 @@ export default function SequenceScroll({ onProgress, onLoaded, children }: Seque
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const imagesRef = useRef<HTMLImageElement[]>([]);
-  const frameCount = 192;
+  const frameCount = 240;
   const currentFrame = useRef({ index: 0 });
+  // Camera state for dynamic zoom/pan effects
+  const camera = useRef({ zoom: 1, panX: 0, panY: 0 });
 
   // Render function that handles High-DPI "cover" drawing
   const renderFrame = (index: number) => {
@@ -32,13 +34,22 @@ export default function SequenceScroll({ onProgress, onLoaded, children }: Seque
     // Safety check if element is hidden
     if (rect.width === 0 || rect.height === 0) return;
     
-    // Calculate aspect ratio to cover
-    const scale = Math.max(rect.width / img.naturalWidth, rect.height / img.naturalHeight); // Standard cover without zoom
-    const dw = img.naturalWidth * scale;
-    const dh = img.naturalHeight * scale;
+    // Base scale for cover fit
+    const baseScale = Math.max(rect.width / img.naturalWidth, rect.height / img.naturalHeight);
     
-    const dx = (rect.width - dw) / 2;
-    const dy = (rect.height - dh) / 2;
+    // Apply dynamic camera zoom
+    const finalScale = baseScale * camera.current.zoom;
+    
+    const dw = img.naturalWidth * finalScale;
+    const dh = img.naturalHeight * finalScale;
+    
+    // Apply dynamic camera pan (offset from center)
+    // panX/panY are percentages of screen width/height (-0.5 to 0.5 range roughly)
+    const panOffsetX = camera.current.panX * rect.width;
+    const panOffsetY = camera.current.panY * rect.height;
+
+    const dx = (rect.width - dw) / 2 + panOffsetX;
+    const dy = (rect.height - dh) / 2 + panOffsetY;
 
     // Clear using logical dimensions (since context is transformed)
     ctx.clearRect(0, 0, rect.width, rect.height);
@@ -57,25 +68,19 @@ export default function SequenceScroll({ onProgress, onLoaded, children }: Seque
         const dpr = window.devicePixelRatio || 1;
         const rect = canvas.getBoundingClientRect();
 
-        // 1. Set display size (css pixels) - handled by className/style, 
-        // but we read it via getBoundingClientRect.
-        // 2. Set actual size in memory (scaled to account for extra pixel density)
         canvas.width = Math.round(rect.width * dpr);
         canvas.height = Math.round(rect.height * dpr);
 
-        // 3. Normalize coordinate system to use css pixels
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         
-        // 4. Set Image Quality options
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = "high";
 
-        // Re-render to prevent flicker
         renderFrame(currentFrame.current.index);
     };
 
     window.addEventListener('resize', handleResize);
-    handleResize(); // Initial sizing
+    handleResize();
 
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -89,7 +94,7 @@ export default function SequenceScroll({ onProgress, onLoaded, children }: Seque
     for (let i = 1; i <= frameCount; i++) {
         const img = new Image();
         const formattedIndex = i.toString().padStart(3, '0');
-        img.src = `/sequence/ezgif-frame-${formattedIndex}.jpg`;
+        img.src = `/sequence2/ezgif-frame-${formattedIndex}.jpg`;
         
         img.onload = () => {
             loadedCount++;
@@ -112,24 +117,35 @@ export default function SequenceScroll({ onProgress, onLoaded, children }: Seque
   useEffect(() => {
     if (!containerRef.current) return;
 
+    // Total scroll distance is effectively 100% of the timeline
     const tl = gsap.timeline({
         scrollTrigger: {
             trigger: containerRef.current,
             start: "top top",
             end: "bottom bottom",
-            scrub: 0.5,
+            scrub: 0.5, // slightly smoother scrubbing
             pin: canvasRef.current,
         }
     });
 
+    // 1. Frame Sequence Animation (Main Driver)
     tl.to(currentFrame.current, {
         index: frameCount - 1,
         snap: "index",
         ease: "none",
+        duration: 100, // Normalized duration to make positioning easier
         onUpdate: () => {
             renderFrame(Math.round(currentFrame.current.index));
         }
-    });
+    }, 0);
+
+    // 2. Camera Moves
+    // Locations based on StoryOverlay positions:
+    // "Pure Focus": top-[250vh] -> approx 31% of 800vh
+    // "Beyond Human": top-[450vh] -> approx 56% of 800vh
+    
+    // Camera Moves Removed as per request (Standard centered view)
+    // If needed, we can re-enable subtle movements here.
 
     return () => {
         tl.kill();
@@ -150,11 +166,14 @@ export default function SequenceScroll({ onProgress, onLoaded, children }: Seque
             style={{ width: '100vw', height: '100vh' }} 
         />
 
-        {/* Vignette Overlay: Thicker linear gradient on sides to strictly cover watermark */}
+        {/* Vignette Overlay: Sides (30%) + Bottom (20%) to hide watermarks and blend footer */}
         <div 
             className="absolute inset-0 z-[5] pointer-events-none"
             style={{ 
-                background: 'linear-gradient(to right, black 0%, transparent 30%, transparent 70%, black 100%)'
+                background: `
+                    linear-gradient(to right, black 0%, transparent 30%, transparent 70%, black 100%),
+                    linear-gradient(to top, black 0%, transparent 20%)
+                `
             }}
         />
         
