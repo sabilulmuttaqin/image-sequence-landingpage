@@ -69,9 +69,22 @@ export default function StoryOverlay() {
           PURE <br />
           FOCUS
         </h2>
-        <p className="text-xl md:text-2xl font-light opacity-90">
-            Zero shortcuts. 100% intensity. <br/>
-            Engineered to keep you locked in.
+        <p className="text-xl md:text-2xl font-bold opacity-100">
+        
+            
+               <span className="text-[var(--color-neon-green)]">Zero shortcuts. 100% intensity.</span> <br/>
+            <span className="font-bold opacity-100 text-white">Engineered to keep you locked in.</span>
+        </p>
+      </section>
+
+      <section className="absolute top-[450vh] left-[10%] text-left max-w-lg z-20 mix-blend-difference text-white">
+        <h2 className="text-6xl md:text-8xl font-black tracking-tighter mb-4 leading-none">
+          BEYOND <br />
+          HUMAN
+        </h2>
+        <p className="text-xl md:text-2xl font-bold opacity-100">
+            <span className="text-[var(--color-neon-green)]">Sustain your peak state.</span> <br/>
+            <span className="font-bold opacity-100 text-white">Precision in every drop.</span>
         </p>
       </section>
 
