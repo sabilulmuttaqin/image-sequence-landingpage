@@ -23,7 +23,7 @@ export default function SequenceScroll({ onProgress, onLoaded, children }: Seque
   // Render function that handles High-DPI "cover" drawing
   const renderFrame = (index: number) => {
     const canvas = canvasRef.current;
-    const ctx = canvas?.getContext('2d');
+    const ctx = canvas?.getContext('2d', { alpha: false });
     const images = imagesRef.current;
     
     if (!canvas || !ctx || !images[index]) return;
@@ -52,7 +52,7 @@ export default function SequenceScroll({ onProgress, onLoaded, children }: Seque
     const dy = (rect.height - dh) / 2 + panOffsetY;
 
     // Clear using logical dimensions (since context is transformed)
-    ctx.clearRect(0, 0, rect.width, rect.height);
+    // ctx.clearRect(0, 0, rect.width, rect.height); // OPTIMIZATION: Redundant since we cover the canvas
     ctx.drawImage(img, dx, dy, dw, dh);
   };
 
@@ -62,10 +62,10 @@ export default function SequenceScroll({ onProgress, onLoaded, children }: Seque
         const canvas = canvasRef.current;
         if (!canvas) return;
         
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { alpha: false });
         if (!ctx) return;
 
-        const dpr = window.devicePixelRatio || 1;
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
         const rect = canvas.getBoundingClientRect();
 
         canvas.width = Math.round(rect.width * dpr);
@@ -74,7 +74,7 @@ export default function SequenceScroll({ onProgress, onLoaded, children }: Seque
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
         
         ctx.imageSmoothingEnabled = true;
-        ctx.imageSmoothingQuality = "high";
+        // ctx.imageSmoothingQuality = "high"; // OPTIMIZATION: Removed for performance
 
         renderFrame(currentFrame.current.index);
     };
